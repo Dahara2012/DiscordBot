@@ -138,7 +138,7 @@ async function setRankRole(member){
         }
 
         RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
-        console.log(RolesToSet); 
+        //console.log(RolesToSet); 
         member.edit({roles:RolesToSet}, "Applying Activity Roles");
       }
   });
@@ -152,7 +152,7 @@ client.on('ready', () => {
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
   //dbLogVoiceUser();
   //dbUpdateUserData();
-  setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
+  //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
 });
  
 client.on('message', msg => {
