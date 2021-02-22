@@ -109,7 +109,7 @@ client.on('ready', () => {
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000);
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
   //dbLogVoiceUser();
-  updateUserData();
+  dbUpdateUserData();
 });
  
 client.on('message', msg => {
