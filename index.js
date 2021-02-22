@@ -103,16 +103,46 @@ async function dbUpdateUserData(){
   }
 }
 
-function setRankRole(member){
+async function setRankRole(member){
+  let RolesToSet = Array();
   let ranks = configServer.ranks;
+  let points = 0;
+  let activityRole = ranks[0].rank;
 
   for (const role of member.roles.cache) {
-    console.log(role);   
+    let toAdd = true;
+    for (const rank of ranks) {
+      if (rank.rank == role[0]){
+        toAdd = false;
+      }
+    }
+    if (toAdd == true){
+      RolesToSet.push(role[1]); 
+    }
   }
 
-  /* for (const element of ranks) {
-    console.log(element);    
-  } */
+  let connection = await connectDatabase();
+  connection.query({
+    sql: 'SELECT ID, COUNT(ID) as "Points", username FROM voiceActivity LEFT JOIN userData ON ID = discordID WHERE ID = ? GROUP BY(ID)',
+    values: [member.user.id]
+    }, function (error, results, fields) {
+      if (error != null){
+        console.log(error);
+      }else{
+        points = results[0].Points;
+        
+        for (const rank of ranks) {
+          if (rank.points <= points){
+            activityRole = rank.rank
+          }
+        }
+
+        RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
+        console.log(RolesToSet); 
+        member.edit({roles:RolesToSet}, "Applying Activity Roles");
+      }
+  });
+  connection.end();
 }
 
 //Events
@@ -121,8 +151,8 @@ client.on('ready', () => {
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000);
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
   //dbLogVoiceUser();
-  dbUpdateUserData();
-  //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
+  //dbUpdateUserData();
+  setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
 });
  
 client.on('message', msg => {
@@ -133,6 +163,10 @@ client.on('message', msg => {
   }).catch((error) => {
     console.log(error);
   })
+});
+
+client.on('voiceStateUpdate', newState => {
+  setRankRole(client.guilds.resolve(configServer.guild).members.resolve(newState.id));
 });
 
 //Run
