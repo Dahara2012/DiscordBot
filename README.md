@@ -1,0 +1,2 @@
+# DiscordBot
+ Coratex Discord Bot
