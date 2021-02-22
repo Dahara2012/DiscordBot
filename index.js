@@ -79,7 +79,7 @@ async function dbLogVoiceUser(){
 async function dbUpdateUserData(){
   let connection = await connectDatabase();
   for (const user of client.users.cache) {
-    console.log(user[1]);
+    //console.log(user[1]);
     let avatar = user[1].avatarURL({format:"png", dynamic:true, size:4096});
     if (avatar == null){
       await connection.query({
