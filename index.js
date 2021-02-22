@@ -104,52 +104,69 @@ async function dbUpdateUserData(){
 }
 
 async function setRankRole(member){
-  return new Promise((resolve, reject) => {
-    let RolesToSet = Array();
-  let ranks = configServer.ranks;
-  let points = 0;
-  let activityRole = ranks[0].rank;
+  try {
+    let connection = await connectDatabase();
+    return new Promise((resolve, reject) => {
+      let RolesToSet = Array();
+      let ranks = configServer.ranks;
+      let points = 0;
+      let activityRole = ranks[0].rank;
 
-  for (const role of member.roles.cache) {
-    let toAdd = true;
-    for (const rank of ranks) {
-      if (rank.rank == role[0]){
-        toAdd = false;
-      }
-    }
-    if (toAdd == true){
-      RolesToSet.push(role[1]); 
-    }
-  }
-
-  let connection = await connectDatabase();
-  connection.query({
-    sql: 'SELECT ID, COUNT(ID) as "Points", username FROM voiceActivity LEFT JOIN userData ON ID = discordID WHERE ID = ? GROUP BY(ID)',
-    values: [member.user.id]
-    }, function (error, results, fields) {
-      if (error != null){
-        console.log(error);
-      }else{
-        points = results[0].Points;
-        
+      for (const role of member.roles.cache) {
+        let toAdd = true;
         for (const rank of ranks) {
-          if (rank.points <= points){
-            activityRole = rank.rank
+          if (rank.rank == role[0]){
+            toAdd = false;
           }
         }
-
-        RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
-        //console.log(RolesToSet); 
-        resolve(member.edit({roles:RolesToSet}, "Applying Activity Roles"));
+        if (toAdd == true){
+          RolesToSet.push(role[1]); 
+        }
       }
-  });
-  connection.end();
-  });
+
+      connection.query({
+        sql: 'SELECT ID, COUNT(ID) as "Points", username FROM voiceActivity LEFT JOIN userData ON ID = discordID WHERE ID = ? GROUP BY(ID)',
+        values: [member.user.id]
+        }, function (error, results, fields) {
+          if (error != null){
+            console.log(error);
+          }else{
+            if (typeof results[0] !== 'undefined'){
+              points = results[0].Points;
+            
+              for (const rank of ranks) {
+                if (rank.points <= points){
+                  activityRole = rank.rank
+                }
+              }
+
+              connection.end();
+              RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
+              member.edit({roles:RolesToSet});
+              resolve("Applying Activity Roles to "+member.user.username);
+            }
+            else{
+              connection.end();
+              RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
+              member.edit({roles:RolesToSet});
+              reject(member.user.username+" hat noch keine Punkte");
+            }
+            
+          }
+      });
+    });
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 async function UpdateAllMembersRanks(guild){
-  for (const member of guild.members) {
-    await setRankRole(member);
+  for (const member of guild.members.cache) {
+    try {
+      await setRankRole(member[1]);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
 //Events
@@ -157,7 +174,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000);
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
-  UpdateAllMembersRanks(client.guild.resolve(configServer.guild));
+  UpdateAllMembersRanks(client.guilds.resolve(configServer.guild));
   //dbLogVoiceUser();
   //dbUpdateUserData();
   //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
