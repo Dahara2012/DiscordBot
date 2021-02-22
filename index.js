@@ -103,6 +103,18 @@ async function dbUpdateUserData(){
   }
 }
 
+function setRankRole(member){
+  let ranks = configServer.ranks;
+
+  for (const role of member.roles.cache) {
+    console.log(role);   
+  }
+
+  /* for (const element of ranks) {
+    console.log(element);    
+  } */
+}
+
 //Events
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -110,6 +122,7 @@ client.on('ready', () => {
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
   //dbLogVoiceUser();
   dbUpdateUserData();
+  //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
 });
  
 client.on('message', msg => {
