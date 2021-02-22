@@ -104,7 +104,8 @@ async function dbUpdateUserData(){
 }
 
 async function setRankRole(member){
-  let RolesToSet = Array();
+  return new Promise((resolve, reject) => {
+    let RolesToSet = Array();
   let ranks = configServer.ranks;
   let points = 0;
   let activityRole = ranks[0].rank;
@@ -139,17 +140,24 @@ async function setRankRole(member){
 
         RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
         //console.log(RolesToSet); 
-        member.edit({roles:RolesToSet}, "Applying Activity Roles");
+        resolve(member.edit({roles:RolesToSet}, "Applying Activity Roles"));
       }
   });
   connection.end();
+  });
 }
 
+async function UpdateAllMembersRanks(guild){
+  for (const member of guild.members) {
+    await setRankRole(member);
+  }
+}
 //Events
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000);
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
+  UpdateAllMembersRanks(client.guild.resolve(configServer.guild));
   //dbLogVoiceUser();
   //dbUpdateUserData();
   //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
