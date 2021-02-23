@@ -88,6 +88,7 @@ async function dbUpdateUserData(){
         }, function (error, results, fields) {
           if (error != null){
             console.log(error);
+            connection.end();
           } 
       });
     }else{
@@ -97,9 +98,11 @@ async function dbUpdateUserData(){
         }, function (error, results, fields) {
           if (error != null){
             console.log(error);
+            connection.end();
           } 
       });
     }
+    connection.end();
   }
 }
 
@@ -174,7 +177,7 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000); //minütlich Punkte generieren
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000); //stündlich Userdaten updaten
-  let logUserDataInterval = setInterval(UpdateAllMembersRanks(client.guilds.resolve(configServer.guild)), 86400000); //täglich Activityranks aktualisieren
+  let logUserDataInterval = setInterval(UpdateAllMembersRanks(client.guilds.resolve(configServer.guild)), 86400000); //täglich Activityranks für alle aktualisieren
   //dbLogVoiceUser();
   //dbUpdateUserData();
   //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
