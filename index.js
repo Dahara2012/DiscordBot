@@ -289,12 +289,14 @@ client.on('ready', () => {
 });*/
 
 client.on('voiceStateUpdate', (oldState, newState) => {
+  let time = getTime();
+  console.log (time+" Event: Voice-Update "+newState.member.displayName):
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.id));
 });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
   let time = getTime();
-  console.log (time+" Presence Update "+newPresence.user.username)
+  console.log (time+" Event: Presence-Update "+newPresence.user.username)
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newPresence.user.id));
 });
 
