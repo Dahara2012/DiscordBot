@@ -14,6 +14,7 @@ async function main(){
 
 //Funktionen
 function setRankUpdateCooldwown(discordid){
+//setzt Cooldown Timestamp des Users auf jetzt
   return new Promise((resolve, reject) => {
     let timestamp = new Date();
     resolve(rankUpdateCooldwown.set(discordid, timestamp));
@@ -128,7 +129,6 @@ function getTime(){
   let h = now.getHours();
   let m = now.getMinutes();
   let s = now.getSeconds();
-  // add a zero in front of numbers<10
   m = checkTime(m);
   s = checkTime(s);
   return h+":"+m+":"+s;
@@ -143,6 +143,7 @@ function checkTime(i) {
 }
 
 function queryUpdateUserData(connection, user){
+  //Aktualisiert oder legt UserData eines Nutzers in der DB neu an
   return new Promise((resolve, reject) => {
     let avatar = user[1].avatarURL({format:"png", dynamic:true, size:4096});
     let username = user[1].username;
@@ -174,6 +175,7 @@ function queryUpdateUserData(connection, user){
 }
 
 async function dbUpdateUserData(){
+  //Aktualisiert oder legt UserData aller Nutzer neu an
   try {
     let connection  = await connectDatabase();
     for (const user of client.users.cache) {
@@ -186,12 +188,14 @@ async function dbUpdateUserData(){
   }
 }
 
-function SetRankRole(connection, member){
+function querySetRankRole(connection, member){
+  //Vergibt den aktuell passenden Activity-Rang an das Gildenmitglied member
   return new Promise((resolve, reject) => {
     let RolesToSet = Array();
     let ranks = configServer.ranks;
     let points = 0;
     let activityRole = ranks[0].rank;
+    let time = getTime();
 
     for (const role of member.roles.cache) {
       let toAdd = true;
@@ -221,16 +225,14 @@ function SetRankRole(connection, member){
               }
             }
 
-            connection.end();
             RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
             member.edit({roles:RolesToSet});
-            resolve("Applying Activity Roles to "+member.user.username);
+            resolve(time+" Applying Activity Roles to "+member.user.username);
           }
           else{
-            connection.end();
             RolesToSet.push(client.guilds.resolve(configServer.guild).roles.resolve(activityRole));
             member.edit({roles:RolesToSet});
-            reject(member.user.username+" hat noch keine Punkte");
+            reject(time+" "+member.user.username+" hat noch keine Punkte");
           }
           
         }
@@ -239,28 +241,21 @@ function SetRankRole(connection, member){
 }
 
 async function dbSetRankRoleOfMember(member){
+  //Vergibt den aktuell passenden Activity-Rang an das Gildenmitglied member und setzt Cooldown für den entsprechenden USer
   try {
     let connection    = await connectDatabase();
     let cooldowncheck = await checkRankUpdateCooldwown(member.id)
-    let respone       = await SetRankRole(connection,member);
+    let response      = await querySetRankRole(connection,member);
     let setcooldown   = await setRankUpdateCooldwown(member.id)
-    console.log(respone);
+    console.log(response);
+    connection.end();
   } catch (error) {
     console.log(error);
   }
 }
 
-async function UpdateAllMembersRanksOfGuild(guild){
-  for (const member of guild.members.cache) {
-    try {
-      await dbSetRankRole(member[1]);
-    } catch (error) {
-      console.log(error);
-    }
-  }
-}
-
 function queryDeleteOldActvitiy(connection){
+  //Löscht abgelaufene (älter 4M) Activity-Punkte aus der DB
   return new Promise((resolve, reject) => {
     connection.query({
       sql: 'DELETE FROM `voiceActivity` WHERE `Date` + INTERVAL 120 DAY <= NOW()'
@@ -298,7 +293,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 });
 
 client.on('presenceUpdate', (oldPresence, newPresence) => {
-  console.log ("Presence Update: "+newPresence.user.username)
+  let time = getTime();
+  console.log (time+" Presence Update "+newPresence.user.username)
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newPresence.user.id));
 });
 
