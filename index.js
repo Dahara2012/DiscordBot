@@ -272,7 +272,8 @@ client.on('voiceStateUpdate', newState => {
 });
 
 client.on('presenceUpdate', newState => {
-  dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.userID));
+  console.log ("Presence Update: "+newState.user.username)
+  dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.user.id));
 });
 
 //Run
