@@ -83,25 +83,38 @@ function returnUserInVoice(){
   });
 }
 
+function queryLogVoiceUser(connection, member){
+  return new Promise((resolve, reject) => {
+    connection.query({
+      sql: 'INSERT INTO `voiceActivity`(`ID`) VALUES (?)',
+      values: [member.user.id]
+      }, function (error, results, fields) {
+        if (error != null){
+          reject(error);
+        }else{
+          let time = getTime();
+          resolve(time+" Points have been awarded to "+member.user.username);
+        }
+    });
+  });
+}
+
 async function dbLogVoiceUser(){
-  let connection = await connectDatabase();
-  let voiceUsers = await returnUserInVoice();
-  for (const member of voiceUsers) {
-    if (member.voice.selfMute == false){
-      await connection.query({
-        sql: 'INSERT INTO `voiceActivity`(`ID`) VALUES (?)',
-        values: [member.user.id]
-        }, function (error, results, fields) {
-          if (error != null){
-            console.log(error);
-          }else{
-            let time = getTime();
-            console.log(time+" Points have been awarded to "+member.user.username);
-          }
-      });
+  try {
+    let connection  = await connectDatabase();
+    let response1   = await queryDeleteOldActvitiy(connection);
+    let voiceUsers  = await returnUserInVoice();
+    console.log(response1);
+    for (const member of voiceUsers) {
+      if (member.voice.selfMute == false){
+        let response2 = await queryLogVoiceUser(connection, member);
+        console.log(response2);
+      }
     }
+    connection.end();
+  } catch (error) {
+    console.log(error);
   }
-  connection.end();
 }
 
 function getTime(){
@@ -228,9 +241,9 @@ async function dbSetRankRoleOfMember(member){
   try {
     let connection    = await connectDatabase();
     let cooldowncheck = await checkRankUpdateCooldwown(member.id)
-    let result        = await SetRankRole(connection,member);
+    let respone       = await SetRankRole(connection,member);
     let setcooldown   = await setRankUpdateCooldwown(member.id)
-    console.log(result);
+    console.log(respone);
   } catch (error) {
     console.log(error);
   }
@@ -246,15 +259,27 @@ async function UpdateAllMembersRanksOfGuild(guild){
   }
 }
 
+function queryDeleteOldActvitiy(connection){
+  return new Promise((resolve, reject) => {
+    connection.query({
+      sql: 'DELETE FROM `voiceActivity` WHERE `Date` + INTERVAL 120 DAY <= NOW()'
+      }, function (error, results, fields) {
+        if (error != null){
+          reject(error);
+        }else{
+          let time = getTime();
+          resolve(time+" Expired activity points have been deleted");
+        }
+    });
+  });
+}
+
 //Events
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
   let logVoiceAvtivityInterval = setInterval(dbLogVoiceUser, 60000);
   let logUserDataInterval = setInterval(dbUpdateUserData, 3600000);
-  //UpdateAllMembersRanksOfGuild(client.guilds.resolve(configServer.guild));
-  //dbLogVoiceUser();
   dbUpdateUserData();
-  //setRankRole(client.guilds.resolve('189163811763257344').members.resolve('161125958881902592'));
 });
  
 /*client.on('message', msg => {
