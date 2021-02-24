@@ -175,7 +175,7 @@ function SetRankRole(connection, member){
           console.log(error);
         }else{
           if (typeof results[0] !== 'undefined'){
-            points = results[0].Points;
+            points = results[0].Points * 16;
           
             for (const rank of ranks) {
               if (rank.points <= points){
