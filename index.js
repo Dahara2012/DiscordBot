@@ -21,6 +21,7 @@ function setRankUpdateCooldwown(discordid){
 }
 
 function checkRankUpdateCooldwown(discordid){
+  //Überprüft ob der Cooldown eines Users für das aktualisieren seines Ranges abgelaufen ist
   return new Promise((resolve, reject) => {
     let timestamp = new Date();
     let cooldownTimestamp = rankUpdateCooldwown.get(discordid);
@@ -37,6 +38,7 @@ function checkRankUpdateCooldwown(discordid){
 }
 
 function connectDatabase(){
+  //Stellt eine Datenbankverbindung her
   return new Promise((resolve, reject) => {
     let connection = mysql.createConnection({
       host     : configDatabase.host,
@@ -58,6 +60,7 @@ function connectDatabase(){
 }
 
 function checkIfBotChannel(channel){
+  //Überprüft ob der Channel in dem eine Textnachricht geschrieben wurde der vorgesehene Bot-Channel ist
   return new Promise((resolve, reject) => {
     if(configServer.botchannel.includes(channel.id)){
       resolve('Nachricht wurde in Bot-Channel geschrieben');
@@ -84,6 +87,7 @@ function returnUserInVoice(){
 }
 
 function queryLogVoiceUser(connection, member){
+  //DB-Query für das loggen von Activity-Points eines Users
   return new Promise((resolve, reject) => {
     connection.query({
       sql: 'INSERT INTO `voiceActivity`(`ID`) VALUES (?)',
@@ -100,6 +104,7 @@ function queryLogVoiceUser(connection, member){
 }
 
 async function dbLogVoiceUser(){
+  //Loggen von Voice-Activity und löschen abgelaufener Voice-Acitvity aller User
   try {
     let connection  = await connectDatabase();
     let response1   = await queryDeleteOldActvitiy(connection);
@@ -118,6 +123,7 @@ async function dbLogVoiceUser(){
 }
 
 function getTime(){
+  //Gibt aktuelle Zeit in Form hh:mm:ss für die Console zurück
   let now = new Date();
   let h = now.getHours();
   let m = now.getMinutes();
@@ -129,47 +135,40 @@ function getTime(){
 }
 
 function checkTime(i) {
+  //Hilfsfunktion für führende Nullen für getTime()
   if (i < 10) {
     i = "0" + i;
   }
   return i;
 }
 
-function UpdateUserData(connection){
+function queryUpdateUserData(connection, user){
   return new Promise((resolve, reject) => {
-    for (let index = 0; index < client.users.cache.size; index++) {
-      let sqlDoneCounter = 0;
-      const user = client.users.cache.array()[index];
-      let avatar = user.avatarURL({format:"png", dynamic:true, size:4096});
-      let username = user.username;
-      //User ohne Avatar
-      if (avatar == null){
-        connection.query({
-          sql: 'INSERT INTO `userData`(`discordID`, `username`) VALUES (?,?) ON DUPLICATE KEY UPDATE `username`=?',
-          values: [user.id, username, username]
-          }, function (error, results, fields) {
-            if (error != null){
-              reject(error);
-            }
-            console.log ("UserData updated for "+username);
-            sqlDoneCounter++;
-        });
-      //User mit Avatar
-      }else{
-        connection.query({
-          sql: 'INSERT INTO `userData`(`discordID`, `avatar`, `username`) VALUES (?,?,?) ON DUPLICATE KEY UPDATE `avatar`=?, `username`=?',
-          values: [user.id, avatar, username, avatar, username]
-          }, function (error, results, fields) {
-            if (error != null){
-              reject(error);
-            }
-            console.log ("UserData updated for "+username);
-            sqlDoneCounter++;
-        });
-      }
-      if (sqlDoneCounter == (client.users.cache.size - 1)){
-        resolve("UserData updated");
-      }
+    let avatar = user[1].avatarURL({format:"png", dynamic:true, size:4096});
+    let username = user[1].username;
+    let time = getTime();
+    //User ohne Avatar
+    if (avatar == null){
+      connection.query({
+        sql: 'INSERT INTO `userData`(`discordID`, `username`) VALUES (?,?) ON DUPLICATE KEY UPDATE `username`=?',
+        values: [user[0], username, username]
+      }, function (error, results, fields) {
+        if (error != null){
+          reject(error);
+        }
+        resolve(time+" UserData updated for "+username);
+      });
+    //User mit Avatar
+    }else{
+      connection.query({
+        sql: 'INSERT INTO `userData`(`discordID`, `avatar`, `username`) VALUES (?,?,?) ON DUPLICATE KEY UPDATE `avatar`=?, `username`=?',
+        values: [user[0], avatar, username, avatar, username]
+      }, function (error, results, fields) {
+        if (error != null){
+          reject(error);
+        }
+        resolve(time+" UserData updated for "+username);
+      });
     }
   });
 }
@@ -177,9 +176,11 @@ function UpdateUserData(connection){
 async function dbUpdateUserData(){
   try {
     let connection  = await connectDatabase();
-    let result      = await UpdateUserData(connection);
+    for (const user of client.users.cache) {
+      let response = await queryUpdateUserData(connection, user);
+      console.log(response);
+    }
     connection.end();
-    console.log(result);
   } catch (error) {
     console.log(error);
   }
