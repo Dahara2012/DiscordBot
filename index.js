@@ -1,10 +1,11 @@
 //Includes
-const configDatabase= require('./config/db.json');
-const configToken   = require('./config/token.json');
-const configServer  = require('./config/server.json');
-const Discord       = require('discord.js');
-const client        = new Discord.Client();
-var   mysql         = require('mysql');
+const configDatabase    = require('./config/db.json');
+const configToken       = require('./config/token.json');
+const configServer      = require('./config/server.json');
+const Discord           = require('discord.js');
+const client            = new Discord.Client();
+var   mysql             = require('mysql');
+var rankUpdateCooldwown = new Map();
 
 //Main
 async function main(){
@@ -12,6 +13,29 @@ async function main(){
 }
 
 //Funktionen
+function setRankUpdateCooldwown(discordid){
+  return new Promise((resolve, reject) => {
+    let timestamp = new Date();
+    resolve(rankUpdateCooldwown.set(discordid, timestamp));
+  });
+}
+
+function checkRankUpdateCooldwown(discordid){
+  return new Promise((resolve, reject) => {
+    let timestamp = new Date();
+    let cooldownTimestamp = rankUpdateCooldwown.get(discordid);
+    if (cooldownTimestamp !== 'undefined'){
+      if ((timestamp - cooldownTimestamp) < 3600000){
+        reject("Cooldown not over yet");
+      }else{
+        resolve("Cooldown over")
+      }
+    }else{
+      resolve("no Cooldown");
+    }
+  });
+}
+
 function connectDatabase(){
   return new Promise((resolve, reject) => {
     let connection = mysql.createConnection({
@@ -202,8 +226,10 @@ function SetRankRole(connection, member){
 
 async function dbSetRankRoleOfMember(member){
   try {
-    let connection  = await connectDatabase();
-    let result      = await SetRankRole(connection,member);
+    let connection    = await connectDatabase();
+    let cooldowncheck = await checkRankUpdateCooldwown(member.id)
+    let result        = await SetRankRole(connection,member);
+    let setcooldown   = await setRankUpdateCooldwown(member.id)
     console.log(result);
   } catch (error) {
     console.log(error);
@@ -243,6 +269,10 @@ client.on('ready', () => {
 
 client.on('voiceStateUpdate', newState => {
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.id));
+});
+
+client.on('presenceUpdate', newState => {
+  dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.userID));
 });
 
 //Run
