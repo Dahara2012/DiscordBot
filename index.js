@@ -267,11 +267,11 @@ client.on('ready', () => {
   })
 });*/
 
-client.on('voiceStateUpdate', oldState, newState => {
+client.on('voiceStateUpdate', (oldState, newState) => {
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newState.id));
 });
 
-client.on('presenceUpdate', oldPresence, newPresence => {
+client.on('presenceUpdate', (oldPresence, newPresence) => {
   console.log ("Presence Update: "+newPresence.user.username)
   dbSetRankRoleOfMember(client.guilds.resolve(configServer.guild).members.resolve(newPresence.user.id));
 });
