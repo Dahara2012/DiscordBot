@@ -71,12 +71,31 @@ async function dbLogVoiceUser(){
           if (error != null){
             console.log(error);
           }else{
-            console.log("Points have been awarded to "+member.user.username);
+            let time = getTime();
+            console.log(time+" Points have been awarded to "+member.user.username);
           }
       });
     }
   }
   connection.end();
+}
+
+function getTime(){
+  let now = new Date();
+  let h = now.getHours();
+  let m = now.getMinutes();
+  let s = now.getSeconds();
+  // add a zero in front of numbers<10
+  m = checkTime(m);
+  s = checkTime(s);
+  return h+":"+m+":"+s;
+}
+
+function checkTime(i) {
+  if (i < 10) {
+    i = "0" + i;
+  }
+  return i;
 }
 
 function UpdateUserData(connection){
