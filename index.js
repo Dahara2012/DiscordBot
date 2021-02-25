@@ -108,7 +108,7 @@ function queryLogVoiceUser(connection, member){
 async function dbLogVoiceUser(){
   //Loggen von Voice-Activity und löschen abgelaufener Voice-Acitvity aller User
   try {
-    let connection  = await connectDatabase();
+    var connection  = await connectDatabase();
     let response1   = await queryDeleteOldActvitiy(connection);
     let voiceUsers  = await returnUserInVoice();
     console.log(response1);
@@ -181,7 +181,7 @@ function queryUpdateUserData(connection, user){
 async function dbUpdateUserData(){
   //Aktualisiert oder legt UserData aller Nutzer neu an
   try {
-    let connection  = await connectDatabase();
+    var connection  = await connectDatabase();
     for (const user of client.users.cache) {
       let response = await queryUpdateUserData(connection, user);
       console.log(response);
@@ -250,7 +250,7 @@ function querySetRankRole(connection, member){
 async function dbSetRankRoleOfMember(member){
   //Vergibt den aktuell passenden Activity-Rang an das Gildenmitglied member und setzt Cooldown für den entsprechenden USer
   try {
-    let connection    = await connectDatabase();
+    var connection    = await connectDatabase();
     let cooldowncheck = await checkRankUpdateCooldwown(member.id)
     let response      = await querySetRankRole(connection,member);
     let setcooldown   = await setRankUpdateCooldwown(member.id)
