@@ -120,7 +120,7 @@ async function dbLogVoiceUser(){
     }
     connection.end();
   } catch (error) {
-    if (connection !== 'undefined'){
+    if (typeof connection !== 'undefined'){
       connection.end();
     }
     console.log(error);
@@ -188,7 +188,7 @@ async function dbUpdateUserData(){
     }
     connection.end();
   } catch (error) {
-    if (connection !== 'undefined'){
+    if (typeof connection !== 'undefined'){
       connection.end();
     }
     console.log(error);
@@ -257,7 +257,7 @@ async function dbSetRankRoleOfMember(member){
     console.log(response);
     connection.end();
   } catch (error) {
-    if (connection !== 'undefined'){
+    if (typeof connection !== 'undefined'){
       connection.end();
     }
     console.log(error);
