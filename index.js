@@ -31,10 +31,10 @@ function checkRankUpdateCooldwown(discordid){
       if ((timestamp - cooldownTimestamp) < 3600000){
         reject(time+" Cooldown not over yet");
       }else{
-        resolve(time" Cooldown over")
+        resolve(time+" Cooldown over");
       }
     }else{
-      resolve(time" no Cooldown");
+      resolve(time+" no Cooldown");
     }
   });
 }
