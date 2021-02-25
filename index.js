@@ -24,16 +24,17 @@ function setRankUpdateCooldwown(discordid){
 function checkRankUpdateCooldwown(discordid){
   //Überprüft ob der Cooldown eines Users für das aktualisieren seines Ranges abgelaufen ist
   return new Promise((resolve, reject) => {
-    let timestamp = new Date();
+    let time              = getTime();
+    let timestamp         = new Date();
     let cooldownTimestamp = rankUpdateCooldwown.get(discordid);
     if (cooldownTimestamp !== 'undefined'){
       if ((timestamp - cooldownTimestamp) < 3600000){
-        reject("Cooldown not over yet");
+        reject(time+" Cooldown not over yet");
       }else{
-        resolve("Cooldown over")
+        resolve(time" Cooldown over")
       }
     }else{
-      resolve("no Cooldown");
+      resolve(time" no Cooldown");
     }
   });
 }
@@ -119,6 +120,7 @@ async function dbLogVoiceUser(){
     }
     connection.end();
   } catch (error) {
+    connection.end();
     console.log(error);
   }
 }
@@ -184,6 +186,7 @@ async function dbUpdateUserData(){
     }
     connection.end();
   } catch (error) {
+    connection.end();
     console.log(error);
   }
 }
@@ -250,6 +253,7 @@ async function dbSetRankRoleOfMember(member){
     console.log(response);
     connection.end();
   } catch (error) {
+    connection.end();
     console.log(error);
   }
 }
