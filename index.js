@@ -79,7 +79,7 @@ function returnUserInVoice(){
     let voiceMembers = Array();
     for (const guild of client.guilds.cache) {
       for (const member of guild[1].members.cache) {
-        if (member[1].voice.channelID != null && member[1].voice.selfMute == false && member[1].voice.channelID != "793215315953451019"){
+        if (member[1].voice.channelID != null && member[1].voice.selfMute == false && member[1].voice.channelID != configServer.afkchannel){
           voiceMembers.push(member[1]);
         }
       }
