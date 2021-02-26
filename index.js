@@ -28,7 +28,7 @@ function checkRankUpdateCooldwown(discordid){
     let timestamp         = new Date();
     let cooldownTimestamp = rankUpdateCooldwown.get(discordid);
     if (cooldownTimestamp !== 'undefined'){
-      if ((timestamp - cooldownTimestamp) < 3600000){
+      if ((timestamp - cooldownTimestamp) < 600000){
         reject(time+" Cooldown not over yet");
       }else{
         resolve(time+" Cooldown over");
@@ -79,7 +79,7 @@ function returnUserInVoice(){
     let voiceMembers = Array();
     for (const guild of client.guilds.cache) {
       for (const member of guild[1].members.cache) {
-        if (member[1].voice.channelID != null && member[1].voice.selfMute == false && member[1].voice.serverMute == false){
+        if (member[1].voice.channelID != null && member[1].voice.selfMute == false && member[1].voice.channelID != "793215315953451019"){
           voiceMembers.push(member[1]);
         }
       }
