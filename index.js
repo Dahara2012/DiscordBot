@@ -13,6 +13,35 @@ async function main(){
 }
 
 //Funktionen
+function queryGetDaysSinceFirstActivity(connection){
+  return new Promise((resolve, reject) => {
+    connection.query({sql: 'SELECT `Date` FROM `voiceActivity` ORDER BY `voiceActivity`.`Date` ASC LIMIT 1'}, function (error, results, fields) {
+      if (error != null){
+        reject(error);
+      }else{
+        resolve(results[0].Date);
+      }
+    });
+  });
+}
+
+async function getDaysSinceFirstActivity(){
+  try {
+    var connection  = await connectDatabase();
+    let firstDate   = await queryGetDaysSinceFirstActivity(connection);
+    connection.end();
+    let now = new Date();
+    var diffInDays = (now - firstDate) / 1000 / 60 / 60 / 24;
+    return diffInDays;
+  } catch (error) {
+    if (typeof connection !== 'undefined'){
+      connection.end();
+    }
+    console.log(error);
+    return false
+  }
+}
+
 function setRankUpdateCooldwown(discordid){
 //setzt Cooldown Timestamp des Users auf jetzt
   return new Promise((resolve, reject) => {
@@ -195,7 +224,7 @@ async function dbUpdateUserData(){
   }
 }
 
-function querySetRankRole(connection, member){
+function querySetRankRole(connection, member,rankMultiplier){
   //Vergibt den aktuell passenden Activity-Rang an das Gildenmitglied member
   return new Promise((resolve, reject) => {
     let RolesToSet = Array();
@@ -227,7 +256,7 @@ function querySetRankRole(connection, member){
             points = results[0].Points;
           
             for (const rank of ranks) {
-              if (rank.points <= points){
+              if (rank.points * rankMultiplier <= points){
                 activityRole = rank.rank
               }
             }
@@ -250,10 +279,11 @@ function querySetRankRole(connection, member){
 async function dbSetRankRoleOfMember(member){
   //Vergibt den aktuell passenden Activity-Rang an das Gildenmitglied member und setzt Cooldown für den entsprechenden USer
   try {
-    var connection    = await connectDatabase();
-    let cooldowncheck = await checkRankUpdateCooldwown(member.id)
-    let response      = await querySetRankRole(connection,member);
-    let setcooldown   = await setRankUpdateCooldwown(member.id)
+    var connection      = await connectDatabase();
+    let cooldowncheck   = await checkRankUpdateCooldwown(member.id)
+    let rankMultiplier  = await getDaysSinceFirstActivity();
+    let response        = await querySetRankRole(connection,member,rankMultiplier);
+    let setcooldown     = await setRankUpdateCooldwown(member.id)
     console.log(response);
     connection.end();
   } catch (error) {
